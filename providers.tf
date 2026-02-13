@@ -1,29 +1,38 @@
 terraform {
+  required_version = ">= 1.6.0"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>4.38.1"
+      version = "~> 3.111" # o la estable que uses en tu pipeline
     }
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.6.3"
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.30"
+    }
+    helm = {
+      source  = "hashicorp/helm"
+      version = "~> 2.13"
     }
   }
 }
 
 provider "azurerm" {
   features {}
-  subscription_id = "2582c624-5631-45e8-848b-8f4b7cdd6490"
 }
 
-data "azurerm_resource_group" "rg-cloud-lab" {
-  name = "rg-cloud-lab"
+# kubeconfig del AKS (se define después del cluster)
+provider "kubernetes" {
+  host                   = azurerm_kubernetes_cluster.aks.kube_config[0].host
+  client_certificate     = base64decode(azurerm_kubernetes_cluster.aks.kube_config[0].client_certificate)
+  client_key             = base64decode(azurerm_kubernetes_cluster.aks.kube_config[0].client_key)
+  cluster_ca_certificate = base64decode(azurerm_kubernetes_cluster.aks.kube_config[0].cluster_ca_certificate)
 }
 
-resource "azurerm_virtual_network" "vnet-est00" {
-  name                = "vnet-est00"
-  location            = data.azurerm_resource_group.rg-cloud-lab.location
-  resource_group_name = data.azurerm_resource_group.rg-cloud-lab.name
-  address_space       = ["10.0.0.0/16"]
+provider "helm" {
+  kubernetes {
+    host                   = azurerm_kubernetes_cluster.aks.kube_config[0].host
+    client_certificate     = base64decode(azurerm_kubernetes_cluster.aks.kube_config[0].client_certificate)
+    client_key             = base64decode(azurerm_kubernetes_cluster.aks.kube_config[0].client_key)
+    cluster_ca_certificate = base64decode(azurerm_kubernetes_cluster.aks.kube_config[0].cluster_ca_certificate)
+  }
 }
-
