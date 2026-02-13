@@ -5,3 +5,4 @@ terraform.tfstate
 test/.terraform/*
 test/.terraform.lock.hcl
 .gitignore
+test/.terraform.tfstate.lock.info
