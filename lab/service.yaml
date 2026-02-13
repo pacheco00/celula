@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: tcsapp-svc
+  namespace: default
+spec:
+  type: ClusterIP
+  selector:
+    app: tcslab-app
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080

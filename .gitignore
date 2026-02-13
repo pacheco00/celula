@@ -2,4 +2,6 @@
 .terraform/*
 terraform.tfstate.backup
 terraform.tfstate
+test/.terraform/*
+test/.terraform.lock.hcl
 .gitignore
