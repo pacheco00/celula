@@ -3,11 +3,11 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 3.111" # o la estable que uses en tu pipeline
+      version = "~> 3.111"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = "~> 2.30"
+      version = "~> 2.31"
     }
     helm = {
       source  = "hashicorp/helm"
