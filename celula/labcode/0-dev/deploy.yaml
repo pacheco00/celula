@@ -1,0 +1,53 @@
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tcslab-app-sa
+  namespace: default
+imagePullSecrets:
+- name: acr-secret
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tcslab-app
+  namespace: default
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: tcslab-app
+  template:
+    metadata:
+      labels:
+        app: tcslab-app
+    spec:
+      serviceAccountName: tcslab-app-sa
+
+      nodeSelector:
+        kubernetes.azure.com/agentpool: poolapps
+
+      containers:
+      - name: tcsapp
+        image: acrtcsdevopsdev01.azurecr.io/tcslab-api-v2:node22
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            cpu: "200m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "1Gi"
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 20

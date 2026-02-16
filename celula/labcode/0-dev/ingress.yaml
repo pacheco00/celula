@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tcslab-ing
+  namespace: default
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  rules:
+  - host: app.tcslab-ecu.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: tcsapp-svc
+            port:
+              number: 80
+  - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: tcsapp-svc
+                port:
+                  number: 80
