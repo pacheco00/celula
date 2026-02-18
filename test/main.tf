@@ -59,13 +59,14 @@ resource "azurerm_subnet" "snet-aks" {
   private_endpoint_network_policies = "Enabled" # Requerido por AKS Azure CNI
 }
 
+/* No requerida
 resource "azurerm_subnet" "snet-ingress" {
   name                 = "snet-ingress-e00"
   resource_group_name  = data.azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.vnet-aks.name
   address_prefixes     = ["10.50.1.0/24"]
 }
-
+*/
 
 ## AKS ##
 
@@ -92,19 +93,23 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
   identity { type = "SystemAssigned" }
 
+
+# Azure CNI
+# Es un rango virtual usado por Kubernetes para asignar IPs a los ClusterIP Services (servicios internos).
   network_profile {
-    network_plugin    = "azure" # Azure CNI
+    network_plugin    = "azure"
     load_balancer_sku = "standard"
     outbound_type     = "loadBalancer"
-    service_cidr      = "10.100.100.0/24" #Es un rango virtual usado por Kubernetes para asignar IPs a los ClusterIP Services (servicios internos).
-    dns_service_ip    = "10.100.100.10"
+    service_cidr      = "10.100.110.0/24" 
+    dns_service_ip    = "10.100.110.10"
     #docker_bridge_cidr = "172.17.0.0/16"
   }
 
   role_based_access_control_enabled = true
   local_account_disabled            = false
   # tags       = { project = var.prefix }
-  depends_on = [azurerm_virtual_network.vnet-aks, azurerm_subnet.snet-aks, azurerm_subnet.snet-ingress]
+  depends_on = [azurerm_virtual_network.vnet-aks, azurerm_subnet.snet-aks]
+  #depends_on = [azurerm_virtual_network.vnet-aks, azurerm_subnet.snet-aks, azurerm_subnet.snet-ingress]
 }
 ##apps nodepool
 resource "azurerm_kubernetes_cluster_node_pool" "workloads" {
