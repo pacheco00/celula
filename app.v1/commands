@@ -1,0 +1,28 @@
+npm init -y
+npm install express
+node app.js
+
+Cómo probarlo (con curl)
+Caso exitoso:
+curl -X POST http://localhost:3000/DevOps \
+  -H "Content-Type: application/json" \
+  -d '{"message":"This is a test","to":"Juan Perez","from":"Rita Asturia","timeToLifeSec":45}'
+# → {"message":"Hello Juan Perez your message will be sent"}
+
+
+Método incorrecto (GET):
+curl -X GET http://localhost:3000/DevOps
+# → {"error":"ERROR"}
+
+Body inválido (campo faltante):
+curl -X POST http://localhost:3000/DevOps \
+  -H "Content-Type: application/json" \
+  -d '{"message":"test"}'
+# → {"error":"ERROR"}
+
+Lógica clave (resumen)
+La solución tiene tres pasos en orden:
+
+Verificar el método HTTP — si no es POST, devolver {"error":"ERROR"} inmediatamente.
+Validar el body — deben existir los 4 campos: message, to, from, timeToLifeSec. Si falta alguno o el JSON es inválido, devolver {"error":"ERROR"}.
+Construir la respuesta — usar el campo to del body para armar "Hello {to} your message will be sent".

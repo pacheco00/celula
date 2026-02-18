@@ -1,8 +1,10 @@
 .terraform.lock.hcl
-.terraform/*
+.terraform
 terraform.tfstate.backup
 terraform.tfstate
-test/.terraform/*
+test/.terraform
 test/.terraform.lock.hcl
 .gitignore
 test/.terraform.tfstate.lock.info
+app.v1/node_modules
+app.v1/package-lock.json

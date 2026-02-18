@@ -1,0 +1,58 @@
+docker build -t mi-devops-app .
+```
+
+- `docker build` → *"construye la cajita"*
+- `-t mi-devops-app` → *"ponle ese nombre a la cajita"* (t = tag = etiqueta)
+- `.` → *"usa el Dockerfile que está aquí mismo"*
+
+Verás algo así en pantalla (Docker trabajando):
+```
+Step 1/7 : FROM node:18-alpine  ✅
+Step 2/7 : WORKDIR /app         ✅
+Step 3/7 : COPY package.json .  ✅
+Step 4/7 : RUN npm install      ✅
+Step 5/7 : COPY . .             ✅
+Step 6/7 : EXPOSE 3000          ✅
+Step 7/7 : CMD ["node","app.js"]✅
+
+Successfully built 🎉
+
+docker run -p 3000:3000 mi-devops-app
+```
+
+- `docker run` → *"abre y enciende la cajita"*
+- `-p 3000:3000` → *"conecta el puerto 3000 de tu computadora con el puerto 3000 de la cajita"*
+- `mi-devops-app` → *"esa cajita que construimos"*
+
+El `-p 3000:3000` es como un **tubo** que conecta tu computadora con la cajita:
+```
+Tu computadora          La cajita (container)
+  puerto 3000   ←────→   puerto 3000
+
+  Prueba:
+curl -X POST http://localhost:3000/DevOps \
+  -H "Content-Type: application/json" \
+  -d '{"message":"This is a test","to":"Juan Perez","from":"Rita Asturia","timeToLifeSec":45}'
+
+
+{"message":"Hello Juan Perez your message will be sent"}
+```
+
+---
+
+### Resumen visual del proceso 🗺️
+```
+Tu código (app.js)
+        +
+package.json (lista de ingredientes)
+        +
+Dockerfile (receta)
+        │
+        ▼
+  docker build          ← construye la cajita
+        │
+        ▼
+  docker run            ← abre y enciende la cajita
+        │
+        ▼
+  localhost:3000        ← ¡tu app funcionando! 🟢
