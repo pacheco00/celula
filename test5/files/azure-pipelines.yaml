@@ -1,0 +1,143 @@
+# .azure-pipelines/azure-pipelines.yaml
+trigger:
+  branches:
+    include:
+      - main
+      - master
+ 
+parameters:
+  - name: environment
+    displayName: Entorno
+    type: string
+    default: dev
+    values: [dev, qa, prod]
+ 
+variables:
+  TF_WORKING_DIR: './terraform/0-dev/'
+  AZURE_SERVICE_CONNECTION: 'azure-dev-tcs'
+  SUBSCRIPTION_ID: '2582c624-5631-45e8-848b-8f4b7cdd6490'  # <-- tu GUID real
+ 
+resources:
+  containers:
+    - container: dockerterraform
+      image: acrtcsdevopsdev01.azurecr.io/terraform-azcli:latest
+      endpoint: 'srv-conn-iac-docker'
+      options: '--user 0 --entrypoint ""'
+      env:
+        TF_IN_AUTOMATION: 'true'
+ 
+stages:
+  - stage: Validate
+    displayName: "Validate Terraform"
+    jobs:
+      - job: validate
+        displayName: "Terraform fmt, init, validate"
+        pool: { name: Default }
+        container: dockerterraform
+        steps:
+          - checkout: self
+            clean: true
+ 
+          - task: Bash@3
+            displayName: "Mostrar versión de Terraform"
+            inputs:
+              targetType: 'inline'
+              script: |
+                set -euo pipefail
+                terraform -version
+ 
+          - task: AzureCLI@2
+            displayName: "Terraform fmt, init, validate (Azure CLI auth)"
+            inputs:
+              azureSubscription: "$(AZURE_SERVICE_CONNECTION)"
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              addSpnToEnvironment: true
+              inlineScript: |
+                set -euo pipefail
+ 
+                # Fijar explícitamente la suscripción de trabajo
+                az account set --subscription "$(SUBSCRIPTION_ID)"
+                echo "Suscripción actual:"
+                az account show --query id -o tsv
+ 
+                cd "$(TF_WORKING_DIR)"
+ 
+                # NO OIDC vars; Terraform usará la sesión de Azure CLI
+                terraform fmt -check -diff
+                terraform init -input=false -reconfigure
+                terraform validate
+
+  
+  - stage: Plan
+    displayName: "Plan Terraform"
+    dependsOn: Validate
+    jobs:
+      - job: plan
+        displayName: "Terraform plan y publicar artefacto"
+        pool: { name: Default }         # tu agente Linux/self-hosted
+        container: dockerterraform
+        steps:
+          - checkout: self
+
+          - task: AzureCLI@2
+            displayName: "Terraform init & plan (Azure CLI auth)"
+            inputs:
+              azureSubscription: "$(AZURE_SERVICE_CONNECTION)"
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              addSpnToEnvironment: true
+              inlineScript: |
+                set -euo pipefail
+
+                az account set --subscription "$(SUBSCRIPTION_ID)"
+                echo "Suscripción actual:"
+                az account show --query id -o tsv
+
+                cd "$(TF_WORKING_DIR)"
+
+                terraform init -input=false
+                terraform plan \
+                  -out="$(Build.ArtifactStagingDirectory)/tfplan-$(environment).bin" \
+                  -input=false \
+                  -no-color
+
+          - task: PublishPipelineArtifact@1
+            displayName: "Publicar artefacto: tfplan"
+            inputs:
+              targetPath: "$(Build.ArtifactStagingDirectory)"
+              artifactName: "tfplan-$(environment)"
+
+ 
+  - stage: Apply
+    displayName: "Apply Terraform (sin aprobación)"
+    dependsOn: Plan
+    condition: succeeded('Plan')
+    jobs:
+      - job: apply
+        displayName: "Aplicar plan terraform"
+        pool: { name: Default }
+        container: dockerterraform
+        steps:
+          - checkout: self
+          - download: current
+            artifact: "tfplan-$(environment)"
+ 
+          - task: AzureCLI@2
+            displayName: "Terraform init & apply (Azure CLI auth)"
+            inputs:
+              azureSubscription: "$(AZURE_SERVICE_CONNECTION)"
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              addSpnToEnvironment: true
+              inlineScript: |
+                set -euo pipefail
+ 
+                az account set --subscription "$(SUBSCRIPTION_ID)"
+                echo "Suscripción actual:"
+                az account show --query id -o tsv
+ 
+                cd "$(TF_WORKING_DIR)"
+ 
+                terraform init -input=false
+                terraform apply -auto-approve -input=false -no-color
