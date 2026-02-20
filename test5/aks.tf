@@ -44,8 +44,8 @@ resource "azurerm_kubernetes_cluster" "aks" {
 resource "azurerm_kubernetes_cluster_node_pool" "workloads" {
   name                  = "poolapps"
   kubernetes_cluster_id = azurerm_kubernetes_cluster.aks.id
-  vm_size               = "Standard_DS2_v2"
-  node_count            = 1
+  vm_size               = var.vm_size
+  node_count            = var.node_count
   vnet_subnet_id        = azurerm_subnet.snet-aks.id #"/subscriptions/2582c624-5631-45e8-848b-8f4b7cdd6490/resourceGroups/rg-demo-aks-dev/providers/Microsoft.Network/virtualNetworks/demo-aks-vnet/subnets/demo-aks-snet-aks"
   zones                 = []
   tags = {
@@ -143,8 +143,8 @@ resource "helm_release" "ingress_nginx" {
           type = "LoadBalancer"
           annotations = {
             "service.beta.kubernetes.io/azure-load-balancer-internal"        = "true"
-            "service.beta.kubernetes.io/azure-load-balancer-internal-subnet" = azurerm_subnet.snet-aks.name
-            # "service.beta.kubernetes.io/azure-load-balancer-internal-subnet" = "azurerm_subnet.snet-aks" #"/subscriptions/2582c624-5631-45e8-848b-8f4b7cdd6490/resourceGroups/rg-cloud-lab/providers/Microsoft.Network/virtualNetworks/vnet-aks-e00/subnets/snet-aks-e00"
+            "service.beta.kubernetes.io/azure-load-balancer-internal-subnet" = "snet-aks"
+            # "service.beta.kubernetes.io/azure-load-balancer-internal-subnet" = "snet-aks # "azurerm_subnet.snet-aks" #"/subscriptions/2582c624-5631-45e8-848b-8f4b7cdd6490/resourceGroups/rg-cloud-lab/providers/Microsoft.Network/virtualNetworks/vnet-aks-e00/subnets/snet-aks-e00"
             "service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path" = "/healthz"
           }
         }

@@ -34,7 +34,7 @@ variable "address-space-snet" {
 variable "vm_size" {
   description = "Tamaño de VM de los nodos"
   type        = string
-  default     = "Standard_DS2_v2"
+  default     = "Standard_B2s" # "Standard_DS2_v2"
 }
 
 variable "node_count" {
