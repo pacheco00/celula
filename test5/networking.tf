@@ -17,8 +17,8 @@ resource "azurerm_subnet" "snet-aks" {
   #enforce_private_link_endpoint_network_policies = true
   private_endpoint_network_policies = "Enabled"
   #private_link_service_network_policies   = true
-
 }
+
 
 # Subred dedicada para el LB interno del Ingress
 /*

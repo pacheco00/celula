@@ -40,6 +40,35 @@ resource "azurerm_kubernetes_cluster" "aks" {
   #tags       = { project = var.prefix }
   depends_on = [azurerm_virtual_network.vnet-aks, azurerm_subnet.snet-aks]
 }
+/*
+############################################
+# ROLE ASSIGNMENTS (FIX AuthorizationFailed)
+############################################
+
+# Permisos sobre la VNet
+resource "azurerm_role_assignment" "aks_network_contributor" {
+  scope                = azurerm_virtual_network.vnet-aks.id
+  role_definition_name = "Network Contributor"
+  principal_id         = azurerm_kubernetes_cluster.aks.identity[0].principal_id
+
+  depends_on = [
+    azurerm_kubernetes_cluster.aks
+
+  ]
+}
+
+# Permisos sobre la Subnet
+resource "azurerm_role_assignment" "aks_subnet_network_contributor" {
+  scope                = azurerm_subnet.snet-aks.id
+  role_definition_name = "Network Contributor"
+  principal_id         = azurerm_kubernetes_cluster.aks.identity[0].principal_id
+
+  depends_on = [
+    azurerm_kubernetes_cluster.aks
+  ]
+}
+*/
+
 ##apps nodepool
 resource "azurerm_kubernetes_cluster_node_pool" "workloads" {
   name                  = "poolapps"
@@ -143,7 +172,7 @@ resource "helm_release" "ingress_nginx" {
           type = "LoadBalancer"
           annotations = {
             "service.beta.kubernetes.io/azure-load-balancer-internal"        = "true"
-            "service.beta.kubernetes.io/azure-load-balancer-internal-subnet" = "snet-aks"
+            "service.beta.kubernetes.io/azure-load-balancer-internal-subnet" = "snet-aks-e00"
             # "service.beta.kubernetes.io/azure-load-balancer-internal-subnet" = "snet-aks # "azurerm_subnet.snet-aks" #"/subscriptions/2582c624-5631-45e8-848b-8f4b7cdd6490/resourceGroups/rg-cloud-lab/providers/Microsoft.Network/virtualNetworks/vnet-aks-e00/subnets/snet-aks-e00"
             "service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path" = "/healthz"
           }
@@ -153,7 +182,7 @@ resource "helm_release" "ingress_nginx" {
   ]
 
   depends_on = [
-    azurerm_kubernetes_cluster.aks,          # ensure cluster is ready
+    azurerm_kubernetes_cluster.aks, # ensure cluster is ready
     azurerm_kubernetes_cluster_node_pool.workloads
   ]
 }
