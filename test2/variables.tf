@@ -15,7 +15,7 @@ variable "vnet_name" {
 
 variable "vnet_cidr" {
   type    = string
-  default = "10.10.0.0/16"
+  default = "10.50.0.0/16"
 }
 
 variable "subnet_aks_name" {
@@ -25,7 +25,7 @@ variable "subnet_aks_name" {
 
 variable "subnet_aks_cidr" {
   type    = string
-  default = "10.100.100.0/24"
+  default = "10.50.1.0/24"
 }
 
 variable "aks_name" {

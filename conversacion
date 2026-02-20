@@ -37,3 +37,18 @@ como lo estoy haciendo
 que se puede mejorar
 como aprendería mejor, más ficientemente
 de qué manera les puedo ayudar
+
+
+│ Warning: Helm release "" was created but has a failed status. Use the `helm` command to investigate the error, correct it, then run Terraform again.    
+│
+│   with helm_release.ingress_nginx,
+│   on aks.tf line 111, in resource "helm_release" "ingress_nginx":
+│  111: resource "helm_release" "ingress_nginx" {
+│
+╵
+╷
+│ Error: context deadline exceeded
+│
+│   with helm_release.ingress_nginx,
+│   on aks.tf line 111, in resource "helm_release" "ingress_nginx":
+│  111: resource "helm_release" "ingress_nginx" {

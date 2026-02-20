@@ -21,7 +21,7 @@ resource "azurerm_subnet" "snet_aks" {
   virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes     = [var.subnet_aks_cidr]
 }
-
+/*
 resource "azurerm_kubernetes_cluster" "aks" {
   name                = var.aks_name
   location            = data.azurerm_resource_group.rg.location
@@ -74,3 +74,4 @@ resource "azurerm_role_assignment" "aks_netcontrib" {
   role_definition_name = "Network Contributor"
   principal_id         = azurerm_kubernetes_cluster.aks.identity[0].principal_id
 }
+*/
