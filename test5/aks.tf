@@ -125,7 +125,7 @@ resource "helm_release" "ingress_nginx" {
   values = [
     yamlencode({
       controller = {
-        replicaCount = 2
+        replicaCount = 1
 
         nodeSelector = {
           agentpool = "poolapps"
@@ -143,7 +143,7 @@ resource "helm_release" "ingress_nginx" {
           type = "LoadBalancer"
           annotations = {
             "service.beta.kubernetes.io/azure-load-balancer-internal"        = "true"
-            "service.beta.kubernetes.io/azure-load-balancer-internal-subnet" = "demo-aks-snet-aks"
+            "service.beta.kubernetes.io/azure-load-balancer-internal-subnet" = azurerm_subnet.snet-aks.name
             # "service.beta.kubernetes.io/azure-load-balancer-internal-subnet" = "azurerm_subnet.snet-aks" #"/subscriptions/2582c624-5631-45e8-848b-8f4b7cdd6490/resourceGroups/rg-cloud-lab/providers/Microsoft.Network/virtualNetworks/vnet-aks-e00/subnets/snet-aks-e00"
             "service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path" = "/healthz"
           }
