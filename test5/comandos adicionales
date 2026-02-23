@@ -8,14 +8,18 @@ ingress-nginx-controller-admission   ClusterIP      10.100.110.144   <none>     
 az aks show -g rg-cloud-lab -n aks-e00 --query identity
 {
   "delegatedResources": null,
-  "principalId": "b2a16437-bb26-432a-9bf5-80365c6c08e5", # Identidad del AKS
+  "principalId": "82f1cfbb-f3c6-4476-ac20-eacae341fc1c", # Identidad del AKS
   "tenantId": "fa9b8893-5889-4ec0-9b2a-38f344ea8090",
   "type": "SystemAssigned",
   "userAssignedIdentities": null
 }
 
+
+
+
+
 az role assignment create \
-  --assignee b2a16437-bb26-432a-9bf5-80365c6c08e5 \
+  --assignee 82f1cfbb-f3c6-4476-ac20-eacae341fc1c \
   --scope /subscriptions/2582c624-5631-45e8-848b-8f4b7cdd6490/resourceGroups/rg-cloud-lab/providers/Microsoft.Network/virtualNetworks/vnet-aks-e00 \
   --role "Network Contributor"
 {
@@ -41,6 +45,17 @@ az network vnet subnet show --resource-group rg-demo-aks-dev --vnet-name demo-ak
 az role assignment create   --assignee fecea895-b84a-48d1-8ad9-a307aa22ad24   --scope /subscriptions/2582c624-5631-45e8-848b-8f4b7cdd6490/resourceGroups/rg-cloud-lab/providers/Microsoft.Network/virtualNetworks/vnet-aks-e00   --role "Network Contributor"
 
 
-
-
 az role assignment create   --assignee fecea895-b84a-48d1-8ad9-a307aa22ad24   --scope /subscriptions/2582c624-5631-45e8-848b-8f4b7cdd6490/resourceGroups/rg-cloud-lab/providers/Microsoft.Network/virtualNetworks/vnet-aks-e00   --role "Network Contributor"
+
+-------------------------
+az aks create -g group -n aks-e00 -c 2 --attach-acr acr-e00
+
+---------------------------------
+
+Ejemplo conexión AKS-ACR
+
+kubectl create docker-registry acr-secret \
+  --docker-server=acrtcsdevopsdev01.azurecr.io \
+  --docker-username=acrtcsdevopsdev01.azurecr.io \
+  --docker-password= KEY \
+  --docker-email=tcslabs
