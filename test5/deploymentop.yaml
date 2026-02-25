@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lab-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lab-app
+  template:
+    metadata:
+      labels:
+        app: lab-app
+    spec:
+      containers:
+      - name: lab-app
+        image: acre00.azurecr.io/lab.app:v1
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "250m"
+            memory: "256Mi"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lab-app-svc
+spec:
+  type: LoadBalancer
+  selector:
+    app: lab-app
+  ports:
+  - port: 3000
+    targetPort: 3000

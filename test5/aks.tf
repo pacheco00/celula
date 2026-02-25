@@ -1,4 +1,26 @@
 ############################
+# ACR
+############################
+
+resource "azurerm_container_registry" "acr" {
+  name                = "acr${var.suffix}"
+  resource_group_name = data.azurerm_resource_group.rg.name
+  location            = var.location
+  sku                 = "Standard"
+  admin_enabled       = false
+}
+
+
+resource "null_resource" "import_image" {
+  provisioner "local-exec" {
+    command = "az acr import --name ${azurerm_container_registry.acr.name} --source docker.io/pacheco00/lab-app:v1 --image lab.app:v1 --username pacheco00 --password ${var.docker_token}"
+  }
+
+  depends_on = [azurerm_container_registry.acr]
+}
+
+
+############################
 # AKS (Azure CNI + Standard LB)
 ############################
 
@@ -24,6 +46,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
   }
 
   identity { type = "SystemAssigned" }
+
 
   network_profile {
     network_plugin    = "azure" # Azure CNI
@@ -89,53 +112,22 @@ resource "azurerm_kubernetes_cluster_node_pool" "workloads" {
   depends_on = [azurerm_kubernetes_cluster.aks]
 }
 
-# # Instalar ingress-nginx con Helm
+# ROLE AcrPull al AKS
 
 /*
-resource "helm_release" "ingress_nginx" {
-  name             = "ingress-nginx"
-  namespace        = "ingress-nginx"
-  create_namespace = true
-  timeout          = 600
-  wait             = true
-  cleanup_on_fail  = false
+resource "azurerm_role_assignment" "aks_acr_pull" {
+  scope                = azurerm_container_registry.acr.id
+  role_definition_name = "AcrPull"
+  principal_id         = azurerm_kubernetes_cluster.aks.identity[0].principal_id
 
-  repository = "https://kubernetes.github.io/ingress-nginx"
-  chart      = "ingress-nginx"
-  version    = "4.10.0"
-
-  values = [
-    yamlencode({
-      controller = {
-        tolerations = [
-          {
-            key      = "CriticalAddonsOnly"
-            operator = "Exists"
-            effect   = "NoSchedule"
-          }
-        ]
-        replicaCount = 2
-        nodeSelector = {
-          "agentpool" = "poolapps" # nombre user pool
-        }
-        # admissionWebhooks = {
-        #  enabled = true
-        #  patch   = { enabled = true }
-        # }
-        service = {
-          type = "LoadBalancer"
-          annotations = {
-            "service.beta.kubernetes.io/azure-load-balancer-internal"        = "true" #LB privad demo-aks-snet-aks
-            "service.beta.kubernetes.io/azure-load-balancer-internal-subnet" = "demo-aks-snet-aks"
-            "service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path" : "/healthz"
-          }
-        }
-      }
-    })
+  depends_on = [
+    azurerm_kubernetes_cluster.aks,
+    azurerm_container_registry.acr
   ]
-  depends_on = [azurerm_kubernetes_cluster_node_pool.workloads]
 }
 */
+
+# # Instalar ingress-nginx con Helm
 
 resource "helm_release" "ingress_nginx" {
   name             = "ingress-nginx"
@@ -173,7 +165,6 @@ resource "helm_release" "ingress_nginx" {
           annotations = {
             "service.beta.kubernetes.io/azure-load-balancer-internal"        = "true"
             "service.beta.kubernetes.io/azure-load-balancer-internal-subnet" = "snet-aks-e00"
-            # "service.beta.kubernetes.io/azure-load-balancer-internal-subnet" = "snet-aks # "azurerm_subnet.snet-aks" #"/subscriptions/2582c624-5631-45e8-848b-8f4b7cdd6490/resourceGroups/rg-cloud-lab/providers/Microsoft.Network/virtualNetworks/vnet-aks-e00/subnets/snet-aks-e00"
             "service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path" = "/healthz"
           }
         }
@@ -186,3 +177,95 @@ resource "helm_release" "ingress_nginx" {
     azurerm_kubernetes_cluster_node_pool.workloads
   ]
 }
+
+
+############################################
+# DEPLOYMENT
+############################################
+/*
+resource "kubernetes_deployment" "lab_app" {
+  metadata {
+    name      = "lab-app"
+    namespace = "default"
+    labels = {
+      app = "lab-app"
+    }
+  }
+
+  spec {
+    replicas = 1
+
+    selector {
+      match_labels = {
+        app = "lab-app"
+      }
+    }
+
+    template {
+      metadata {
+        labels = {
+          app = "lab-app"
+        }
+      }
+
+      spec {
+        container {
+          name  = "lab-app"
+          image = "${azurerm_container_registry.acr.login_server}/lab.app:v1"
+
+          port {
+            container_port = 80
+          }
+
+          resources {
+            limits = {
+              cpu    = "250m"
+              memory = "256Mi"
+            }
+            requests = {
+              cpu    = "100m"
+              memory = "128Mi"
+            }
+          }
+        }
+      }
+    }
+  }
+
+  depends_on = [
+    azurerm_kubernetes_cluster.aks #,
+    #azurerm_role_assignment.aks_acr_pull
+  ]
+}
+
+############################################
+# SERVICE
+############################################
+
+resource "kubernetes_service" "lab_app_svc" {
+  metadata {
+    name      = "lab-app-svc"
+    namespace = "default"
+    labels = {
+      app = "lab-app"
+    }
+  }
+
+  spec {
+    selector = {
+      app = "lab-app"
+    }
+
+    port {
+      port        = 80
+      target_port = 80
+    }
+
+    type = "ClusterIP"
+  }
+
+  depends_on = [
+    kubernetes_deployment.lab_app
+  ]
+}
+*/

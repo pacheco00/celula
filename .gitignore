@@ -8,3 +8,4 @@ test/.terraform.lock.hcl
 test/.terraform.tfstate.lock.info
 app.v1/node_modules
 app.v1/package-lock.json
+docker-variable
