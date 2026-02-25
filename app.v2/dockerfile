@@ -1,0 +1,20 @@
+# 1. ¿En qué base nos paramos?
+FROM node:18-alpine
+
+# 2. ¿Dónde trabajamos dentro de la cajita?
+WORKDIR /app
+
+# 3. Copiar la lista de ingredientes primero
+COPY package.json .
+
+# 4. Instalar los ingredientes
+RUN npm install
+
+# 5. Copiar el resto del código
+COPY . .
+
+# 6. Decirle a Docker que la app usa el puerto 3000
+EXPOSE 3000
+
+# 7. El comando para arrancar la app
+CMD ["node", "app.js"]

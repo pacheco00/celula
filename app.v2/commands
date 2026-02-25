@@ -26,3 +26,20 @@ La solución tiene tres pasos en orden:
 Verificar el método HTTP — si no es POST, devolver {"error":"ERROR"} inmediatamente.
 Validar el body — deben existir los 4 campos: message, to, from, timeToLifeSec. Si falta alguno o el JSON es inválido, devolver {"error":"ERROR"}.
 Construir la respuesta — usar el campo to del body para armar "Hello {to} your message will be sent".
+
+# docker
+docker build -t nombre-de-tu-imagen .
+docker run -it nombre-de-tu-imagen
+docker run -it -d -p 8080:3000 lab-app:v2
+
+# Prueba
+curl -X POST http://localhost:8080/DevOps \
+  -H "Content-Type: application/json" \
+  -d '{"message":"This is a test","to":"Juan Perez","from":"Rita Asturia","timeToLifeSec":45}'
+
+
+# Subir imagen a Dockerhub
+docker login
+docker tag lab-app:v2 pacheco00/lab-app:v2
+docker push pacheco00/lab-app:v2
+
