@@ -2,6 +2,12 @@
 # Variables de configuración
 ############################
 
+variable "dockerhub_token" {
+  type      = string
+  sensitive = true
+  description = "Token de acceso a DockerHub"
+}
+
 variable "rg_name" {
   type    = string
   default = "rg-cloud-lab"
