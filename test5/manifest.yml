@@ -1,0 +1,119 @@
+# 1. ServiceAccount
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: lab-app-sa
+  namespace: default
+imagePullSecrets:
+- name: acr-secret
+
+---
+# 2. Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lab-app
+  namespace: default
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: lab-app
+  template:
+    metadata:
+      labels:
+        app: lab-app
+    spec:
+      serviceAccountName: lab-app-sa
+
+      nodeSelector:
+        kubernetes.azure.com/agentpool: poolapps
+
+      containers:
+      - name: lab-app
+        image: acre00.azurecr.io/lab-app:v2
+        ports:
+        - containerPort: 3000
+        resources:
+          requests:
+            cpu: "200m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "1Gi"
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 3000
+          initialDelaySeconds: 15
+          periodSeconds: 20
+
+---
+# 3. Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: lab-app-svc
+  namespace: default
+spec:
+  type: ClusterIP
+  selector:
+    app: lab-app
+  ports:
+  - name: http
+    port: 80
+    targetPort: 3000
+
+---
+# 4. Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: lab-app-ing
+  namespace: default
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: app.lab-app-ecu.com
+    http:
+      paths:
+      - path: /DevOps
+        pathType: Prefix
+        backend:
+          service:
+            name: lab-app-svc
+            port:
+              number: 80
+      - path: /healthz
+        pathType: Prefix
+        backend:
+          service:
+            name: lab-app-svc
+            port:
+              number: 80
+              
+  - host: demo-aks-dev-appgw.eastus.cloudapp.azure.com   # <---- AGREGAR ESTO
+    http:
+      paths:
+      - path: /DevOps
+        pathType: Prefix
+        backend:
+          service:
+            name: lab-app-svc
+            port:
+              number: 80
+      - path: /healthz
+        pathType: Prefix
+        backend:
+          service:
+            name: tcsapp-svc
+            port:
+              number: 80
