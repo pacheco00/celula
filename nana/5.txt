@@ -1,0 +1,58 @@
+Setup server on Azure
+
+Create Ubuntu Server
+* Select create virtual machines
+* Select Subscription, Resource Group
+* Set VM name, region, availability options, security type, image (Ubuntu Server 24.04), VM Architecture, size
+* Account administrator, SSH public key, username, SSH public key source, type, key pair name, Inbound ports (HTTP, HTTPS, SSH)
+* Create VM
+
+Connect to VM
+* Download SSH key
+
+
+
+Deploy and run application artifact
+- in local computer
+* https://gitlab.com/twn-devops-bootcamp/latest/05-cloud/java-react-example
+* cd java-react-example
+* gradle build
+
+- connecto to cloud server
+* ssh root@IP
+
+Install packages
+* apt update
+* java*
+* docker
+* node
+* gradle
+
+- copy jarfile from local computer to linux on cloud
+* scp build/libs/java-example.jar root@IP:root
+* java -jar java-react-example.jar (application started)
+* open port 7071
+* open app publicip:7071
+* java -jar java-react-example.jar & (detached mode)
+* ps aux | grep java
+* apt install net-tools
+* netstat -lpnt
+
+Create linux user
+* adduser student
+* set password
+* add user to sudo group
+* usermod -aG sudo student
+
+Switch user
+* su - student
+* pwd
+* exit
+
+connecto to server with student
+* ssh student@ip (doesn't work)
+* ssh root@ip -> su - student
+* on  local cat ~/.ssh/id_rsa.public
+* on cloud server -> home/student mkdir .ssh
+* sudo vim .ssh/authorized_keys -> copy public key from cat -> exit
+* ssh student@ip
