@@ -1,0 +1,164 @@
+kubectl get namespace
+
+kubectl get svc -n ingress-nginx
+NAME                                 TYPE           CLUSTER-IP       EXTERNAL-IP   PORT(S)                      AGE
+ingress-nginx-controller             LoadBalancer   10.100.110.232   <pending>     80:30796/TCP,443:30224/TCP   27m
+ingress-nginx-controller-admission   ClusterIP      10.100.110.144   <none>        443/TCP       
+
+
+# Identificar identidad del AKS
+az aks show -g rg-cloud-lab -n aks-e00 --query identity
+{
+  "delegatedResources": null,
+  "principalId": "82f1cfbb-f3c6-4476-ac20-eacae341fc1c", # Identidad del AKS
+  "tenantId": "fa9b8893-5889-4ec0-9b2a-38f344ea8090",
+  "type": "SystemAssigned",
+  "userAssignedIdentities": null
+}
+
+# Crear el rol
+az role assignment create \
+  --assignee dac68d3e-32d3-4abd-b6b4-b4c723fe5767 \
+  --scope /subscriptions/2582c624-5631-45e8-848b-8f4b7cdd6490/resourceGroups/rg-cloud-lab/providers/Microsoft.Network/virtualNetworks/vnet-aks-e00 \
+  --role "Network Contributor"
+
+
+----------------------------------
+
+# deployment
+kubectl apply -f deployment.yml
+serviceaccount/lab-app-sa created
+deployment.apps/lab-app created
+service/lab-app-svc created
+
+
+# ID del ACR
+az acr show \
+  --name acre00 \
+  --resource-group rg-cloud-lab \
+  --query "id" \
+  -o tsv
+
+/subscriptions/2582c624-5631-45e8-848b-8f4b7cdd6490/resourceGroups/rg-cloud-lab/providers/Microsoft.ContainerRegistry/registries/acre00
+
+# Asignación role acr pull
+az role assignment create \
+  --assignee 0e9559e5-6ed3-4282-a791-14d45b692091 \
+  --role "AcrPull" \
+  --scope /subscriptions/2582c624-5631-45e8-848b-8f4b7cdd6490/resourceGroups/rg-cloud-lab/providers/Microsoft.ContainerRegistry/registries/acre00
+
+# error backoff acr a aks
+az aks update -n aks-e00 -g rg-cloud-lab --attach-acr acre00
+This grants the AKS node pool permission to pull images from your ACR.
+
+{
+  "condition": null,
+  "conditionVersion": null,
+  "createdBy": null,
+  "createdOn": "2026-02-20T20:15:14.198153+00:00",
+  "delegatedManagedIdentityResourceId": null,
+  "description": null,
+  "id": "/subscriptions/2582c624-5631-45e8-848b-8f4b7cdd6490/resourceGroups/rg-cloud-lab/providers/Microsoft.Network/virtualNetworks/vnet-aks-e00/providers/Microsoft.Authorization/roleAssignments/de7a581f-913b-4c22-a1c5-ac7cbed9e158",
+  "name": "de7a581f-913b-4c22-a1c5-ac7cbed9e158",
+  "principalId": "b2a16437-bb26-432a-9bf5-80365c6c08e5",
+  "principalType": "ServicePrincipal",
+  "resourceGroup": "rg-cloud-lab",
+  "roleDefinitionId": "/subscriptions/2582c624-5631-45e8-848b-8f4b7cdd6490/providers/Microsoft.Authorization/roleDefinitions/4d97b98b-1d4f-4787-a291-c67834d212e7",
+  "scope": "/subscriptions/2582c624-5631-45e8-848b-8f4b7cdd6490/resourceGroups/rg-cloud-lab/providers/Microsoft.Network/virtualNetworks/vnet-aks-e00",
+  "type": "Microsoft.Authorization/roleAssignments",
+  "updatedBy": "f5250e7b-266d-44fa-9bb2-b2c76d3c6a71",
+  "updatedOn": "2026-02-20T20:15:14.601163+00:00"
+}
+
+az network vnet subnet show --resource-group rg-demo-aks-dev --vnet-name demo-aks-vnet --name demo-aks-snet-aks --query "delegations"
+az role assignment create   --assignee fecea895-b84a-48d1-8ad9-a307aa22ad24   --scope /subscriptions/2582c624-5631-45e8-848b-8f4b7cdd6490/resourceGroups/rg-cloud-lab/providers/Microsoft.Network/virtualNetworks/vnet-aks-e00   --role "Network Contributor"
+
+
+az role assignment create   --assignee fecea895-b84a-48d1-8ad9-a307aa22ad24   --scope /subscriptions/2582c624-5631-45e8-848b-8f4b7cdd6490/resourceGroups/rg-cloud-lab/providers/Microsoft.Network/virtualNetworks/vnet-aks-e00   --role "Network Contributor"
+
+-------------------------
+az aks create -g group -n aks-e00 -c 2 --attach-acr acr-e00
+
+---------------------------------
+
+# Ejemplo conexión AKS-ACR
+
+kubectl create docker-registry acr-secret \
+  --docker-server=acre00.azurecr.io \
+  --docker-username=acre00.azurecr.io \
+  --docker-password= KEY \
+  --docker-email=lab-app
+
+# secreto acr
+kubectl delete secret acr-secret -n default
+
+kubectl create secret docker-registry acr-secret \
+  --docker-server=acre00.azurecr.io \
+  --docker-username=acre00 \
+  --docker-password=CiZ6V1p5zaHabFjp2zbOGl03YBAPXx9xCqIoG4vAXjodeNbB1IjkJQQJ99CBACYeBjFEqg7NAAACAZCRD309 \
+  --docker-email=lab-app \
+  -n default
+
+
+
+El repositorio en Docker Hub es privado
+
+az acr import \
+  --name <nombre-acr> \
+  --source docker.io/<tuusuario>/<tuimagen>:<tag> \
+  --image <tuimagen>:<tag> \
+  --username <tuusuario> \
+  --password <tu_password_o_token>
+
+Consejo: usa un token de acceso de Docker Hub, no tu contraseña real.
+
+Cómo hacerlo desde Terraform (paso 3)
+Usando null_resource + local-exec:
+
+---------------------------------------------
+
+resource "null_resource" "import_image" {
+  provisioner "local-exec" {
+    command = <<EOT
+      az acr import \
+        --name ${azurerm_container_registry.acr.name} \
+        --source docker.io/${var.docker_user}/${var.image_name}:${var.image_tag} \
+        --image ${var.image_name}:${var.image_tag} \
+        --username ${var.docker_user} \
+        --password ${var.docker_password}
+    EOT
+  }
+}
+
+variable "docker_user" {}
+variable "docker_password" {}
+variable "image_name" {}
+variable "image_tag" {}
+
+-----------------------------------
+
+resource "null_resource" "import_image" {
+  provisioner "local-exec" {
+    command = <<EOT
+      az acr import \
+        --name ${azurerm_container_registry.acr.name} \
+        --source docker.io/${var.docker_user}/${var.image_name}:${var.image_tag} \
+        --image ${var.image_name}:${var.image_tag} \
+        --username ${var.docker_user} \
+        --password ${var.docker_password}
+    EOT
+  }
+}
+
+variable "docker_user" {}
+variable "docker_password" {}
+variable "image_name" {}
+variable "image_tag" {}
+
+
+
+az acr import \
+  --name acre00 \
+  --source docker.io/pacheco00/lab-app:v1 \
+  --image lab-app:v1 \
+
