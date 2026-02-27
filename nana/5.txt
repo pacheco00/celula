@@ -10,6 +10,13 @@ Create Ubuntu Server
 Connect to VM
 * Download SSH key
 
+$ ssh -i linuxe00_key.pem azuser@20.163.205.173
+Welcome to Ubuntu 24.04.3 LTS (GNU/Linux 6.14.0-1017-azure x86_64)
+
+Install packages
+* apt update
+* java 17
+* gradle
 
 
 Deploy and run application artifact
@@ -20,13 +27,6 @@ Deploy and run application artifact
 
 - connecto to cloud server
 * ssh root@IP
-
-Install packages
-* apt update
-* java*
-* docker
-* node
-* gradle
 
 - copy jarfile from local computer to linux on cloud
 * scp build/libs/java-example.jar root@IP:root
