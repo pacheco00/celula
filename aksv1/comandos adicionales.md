@@ -48,7 +48,7 @@ az role assignment create \
   --scope /subscriptions/2582c624-5631-45e8-848b-8f4b7cdd6490/resourceGroups/rg-cloud-lab/providers/Microsoft.ContainerRegistry/registries/acre00
 
 # error backoff acr a aks
-az aks update -n aks-e00 -g rg-cloud-lab --attach-acr acre00
+
 This grants the AKS node pool permission to pull images from your ACR.
 
 {
@@ -164,3 +164,5 @@ az acr import \
 
 
 az acr import --name acre00 --source docker.io/pacheco00/lab-app:v2 --image lab.app:v2 --username pacheco00 --password 
+
+
