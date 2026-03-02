@@ -162,3 +162,5 @@ az acr import \
   --source docker.io/pacheco00/lab-app:v1 \
   --image lab-app:v1 \
 
+
+az acr import --name acre00 --source docker.io/pacheco00/lab-app:v2 --image lab.app:v2 --username pacheco00 --password 

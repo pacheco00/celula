@@ -31,7 +31,7 @@ spec:
 
       containers:
       - name: lab-app
-        image: acre00.azurecr.io/lab-app:v2
+        image: acre00.azurecr.io/lab.app:v2
         ports:
         - containerPort: 3000
         resources:
@@ -114,6 +114,6 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: tcsapp-svc
+            name: lab-app-svc
             port:
               number: 80
