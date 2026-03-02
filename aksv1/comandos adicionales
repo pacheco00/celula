@@ -18,7 +18,7 @@ az aks show -g rg-cloud-lab -n aks-e00 --query identity
 
 # Crear el rol
 az role assignment create \
-  --assignee dac68d3e-32d3-4abd-b6b4-b4c723fe5767 \
+  --assignee e040350a-18cd-4a01-b4b5-56015a9a6f67 \
   --scope /subscriptions/2582c624-5631-45e8-848b-8f4b7cdd6490/resourceGroups/rg-cloud-lab/providers/Microsoft.Network/virtualNetworks/vnet-aks-e00 \
   --role "Network Contributor"
 

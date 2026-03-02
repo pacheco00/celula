@@ -13,7 +13,7 @@ resource "azurerm_container_registry" "acr" {
 
 resource "null_resource" "import_image" {
   provisioner "local-exec" {
-    command = "az acr import --name ${azurerm_container_registry.acr.name} --source docker.io/pacheco00/lab-app:v1 --image lab.app:v1 --username pacheco00 --password ${var.dockerhub_token}"
+    command = "az acr import --name ${azurerm_container_registry.acr.name} --source docker.io/pacheco00/lab-app:v2 --image lab.app:v2 --username pacheco00 --password ${var.dockerhub_token}"
   }
 
   depends_on = [azurerm_container_registry.acr]
